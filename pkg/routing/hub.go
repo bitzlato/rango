@@ -581,6 +581,25 @@ func (h *Hub) handleOrder(req *Request) {
 	h.orderPrivate(req)
 }
 
+type orderPrivateMessage struct {
+	MemberUID string          `json:"member_uid"`
+	Data      json.RawMessage `json:"data"`
+}
+
+func getOrderPrivateMessage(uid string, data []byte) ([]byte, error) {
+	d := orderPrivateMessage{
+		MemberUID: uid,
+		Data:      data,
+	}
+
+	bb, err := json.Marshal(d)
+	if err != nil {
+		return nil, fmt.Errorf("Fail to JSON marshal: %s", err.Error())
+	}
+
+	return bb, nil
+}
+
 func (h *Hub) orderPrivate(req *Request) {
 	uid := req.client.GetAuth().UID
 	if uid == "" {
@@ -588,17 +607,9 @@ func (h *Hub) orderPrivate(req *Request) {
 		return
 	}
 
-	data := struct {
-		MemberUID string          `json:"member_uid"`
-		Data      json.RawMessage `json:"data"`
-	}{
-		MemberUID: uid,
-		Data:      req.Message,
-	}
-
-	bb, err := json.Marshal(data)
+	bb, err := getOrderPrivateMessage(uid, req.Message)
 	if err != nil {
-		log.Error().Msgf("Fail to JSON marshal: %s", err.Error())
+		log.Error().Msg(err.Error())
 		return
 	}
 
@@ -608,5 +619,7 @@ func (h *Hub) orderPrivate(req *Request) {
 		return
 	}
 
-	log.Trace().Msgf("Pushed to %s", string(req.Message))
+	if isTrace() {
+		log.Trace().Msgf("Pushed to %s", string(req.Message))
+	}
 }
