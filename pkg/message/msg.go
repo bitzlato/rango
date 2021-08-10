@@ -7,6 +7,7 @@ import (
 type Request struct {
 	Method  string
 	Streams []string
+	Message []byte
 }
 
 func PackOutgoingResponse(err error, message interface{}) ([]byte, error) {

@@ -51,6 +51,14 @@ func Parse(msg []byte) (Request, error) {
 				parsed.Streams = append(parsed.Streams, streams.Index(i).Interface().(string))
 			}
 		}
+	case "order":
+		parsed.Method = "order"
+		bb, err := json.Marshal(v["data"])
+		if err != nil {
+			return parsed, err
+		}
+
+		parsed.Message = bb
 	default:
 		return parsed, errors.New("Could not parse Type: Invalid event")
 	}
