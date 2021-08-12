@@ -38,7 +38,7 @@ func TestParse(t *testing.T) {
 	t.Run("Test unauth client", func(t *testing.T) {
 		req, err := Parse(bb, isNotAuthClient)
 		if err == nil {
-			t.Fatalf("Should not return error: %s", err)
+			t.Fatalf("Should return error")
 		}
 
 		assert.Equal(t, "order", req.Method)
