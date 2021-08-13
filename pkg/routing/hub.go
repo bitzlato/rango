@@ -50,10 +50,9 @@ type Hub struct {
 }
 
 type amqpSession struct {
-	session    *amqpLocal.AMQPSession
-	exchange   string
-	routingKey string
-
+	session                 *amqpLocal.AMQPSession
+	orderExchange           string
+	orderRoutingKey         string
 	cancelOnCloseExchange   string
 	cancelOnCloseRoutingKey string
 }
@@ -71,7 +70,7 @@ type IncrementalObject struct {
 	Increments []string
 }
 
-func NewHub(rbac map[string][]string, session *amqpLocal.AMQPSession, exchange string, routingKey string, cancelOnCloseExchange string, cancelOnCloseRoutingKey string) *Hub {
+func NewHub(rbac map[string][]string, session *amqpLocal.AMQPSession, orderExchange string, orderRoutingKey string, cancelOnCloseExchange string, cancelOnCloseRoutingKey string) *Hub {
 	return &Hub{
 		Requests:           make(chan Request),
 		Unregister:         make(chan IClient),
@@ -81,10 +80,9 @@ func NewHub(rbac map[string][]string, session *amqpLocal.AMQPSession, exchange s
 		IncrementalObjects: make(map[string]*IncrementalObject, 5),
 		RBAC:               rbac,
 		mq: amqpSession{
-			session:    session,
-			exchange:   exchange,
-			routingKey: routingKey,
-
+			session:                 session,
+			orderExchange:           orderExchange,
+			orderRoutingKey:         orderRoutingKey,
 			cancelOnCloseExchange:   cancelOnCloseExchange,
 			cancelOnCloseRoutingKey: cancelOnCloseRoutingKey,
 		},
@@ -666,7 +664,7 @@ func (h *Hub) orderPrivate(req *Request) {
 		return
 	}
 
-	err = h.mq.session.Push(h.mq.exchange, h.mq.routingKey, bb)
+	err = h.mq.session.Push(h.mq.orderExchange, h.mq.orderRoutingKey, bb)
 	if err != nil {
 		log.Error().Msgf("Push failed: %s", err)
 		return

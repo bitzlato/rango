@@ -27,8 +27,8 @@ var (
 	pubKey   = flag.String("pubKey", "config/rsa-key.pub", "Path to public key")
 	exName   = flag.String("exchange", "peatio.events.ranger", "Exchange name of upstream messages")
 
-	exchangeNameWrite = flag.String("order-exchange", "peatio.events.ranger", "Exchange name for order messages")
-	routingKeyWrite   = flag.String("order-routing-key", "peatio.order.new", "Routing key for order messages")
+	orderExchange   = flag.String("order-exchange", "peatio.events.ranger", "Exchange name for order messages")
+	orderRoutingKey = flag.String("order-routing-key", "peatio.order.new", "Routing key for order messages")
 
 	cancelOnCloseExchange   = flag.String("cancel-on-close-exchange", "peatio.events.ranger", "Exchange name for cancel on close")
 	cancelOnCloseRoutingKey = flag.String("cancel-on-close-routing-key", "peatio.cancel.close", "Routing key for cancel on close")
@@ -188,7 +188,7 @@ func main() {
 		return
 	}
 
-	hub := routing.NewHub(rbac, mq, *exchangeNameWrite, *routingKeyWrite, *cancelOnCloseExchange, *cancelOnCloseRoutingKey)
+	hub := routing.NewHub(rbac, mq, *orderExchange, *orderRoutingKey, *cancelOnCloseExchange, *cancelOnCloseRoutingKey)
 
 	err = mq.Stream(*exName, qName, hub.ReceiveMsg)
 	defer mq.Close(qName)
