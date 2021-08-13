@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -42,8 +43,9 @@ var upgrader = websocket.Upgrader{
 var maxBufferedMessages = 256
 
 type Auth struct {
-	UID  string
-	Role string
+	UID             string
+	Role            string
+	IsCancelOnClose bool
 }
 
 // FIXME: IClient looks very wrong.
@@ -149,6 +151,16 @@ func NewClient(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Info().Msgf("New authenticated connection: %s", client.Auth.UID)
 	}
 
+	if client.isAuthenticated() {
+		query := r.URL.Query()
+
+		client.Auth.IsCancelOnClose = parseCancelOnCloseFromURI(query)
+
+		if client.Auth.IsCancelOnClose {
+			log.Info().Msgf("Cancel on close mode enabled: %s", client.Auth.UID)
+		}
+	}
+
 	hub.handleSubscribe(&Request{
 		client: client,
 		Request: msg.Request{
@@ -236,6 +248,23 @@ func parseStreamsFromURI(uri string) []string {
 
 	}
 	return streams
+}
+
+func parseCancelOnCloseFromURI(query url.Values) bool {
+	isCancelOnClose := false
+
+	vv, ok := query["cancel_on_close"]
+	if !ok {
+		return isCancelOnClose
+	}
+
+	if len(vv) == 0 {
+		return isCancelOnClose
+	}
+
+	isCancelOnClose, _ = strconv.ParseBool(vv[0])
+
+	return isCancelOnClose
 }
 
 // read pumps messages from the websocket connection to the hub.

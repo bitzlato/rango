@@ -29,6 +29,9 @@ var (
 
 	exchangeNameWrite = flag.String("order-exchange", "peatio.events.ranger", "Exchange name for order messages")
 	routingKeyWrite   = flag.String("order-routing-key", "peatio.order.new", "Routing key for order messages")
+
+	cancelOnCloseExchange   = flag.String("cancel-on-close-exchange", "peatio.events.ranger", "Exchange name for cancel on close")
+	cancelOnCloseRoutingKey = flag.String("cancel-on-close-routing-key", "peatio.cancel.close", "Routing key for cancel on close")
 )
 
 const prefix = "Bearer "
@@ -185,7 +188,7 @@ func main() {
 		return
 	}
 
-	hub := routing.NewHub(rbac, mq, *exchangeNameWrite, *routingKeyWrite)
+	hub := routing.NewHub(rbac, mq, *exchangeNameWrite, *routingKeyWrite, *cancelOnCloseExchange, *cancelOnCloseRoutingKey)
 
 	err = mq.Stream(*exName, qName, hub.ReceiveMsg)
 	defer mq.Close(qName)

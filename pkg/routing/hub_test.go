@@ -47,7 +47,7 @@ func (c *MockedClient) UnsubscribePrivate(s string) {
 }
 
 func setup(c *MockedClient, streams []string) *Hub {
-	h := NewHub(nil, nil, "", "")
+	h := NewHub(nil, nil, "", "", "", "")
 	h.handleSubscribe(&Request{
 		client: c,
 		Request: message.Request{
@@ -240,7 +240,7 @@ func TestGetTopic(t *testing.T) {
 }
 
 func TestHandleMessage(t *testing.T) {
-	h := NewHub(nil, nil, "", "")
+	h := NewHub(nil, nil, "", "", "", "")
 	c := &MockedClient{}
 	c.On("SubscribePublic", "abc.ticker").Return()
 	c.On("Send", "{\"abc.ticker\":{\"some\":\"data\"}}").Return()
@@ -263,7 +263,7 @@ func TestHandleMessage(t *testing.T) {
 }
 
 func TestIncrementalObjectStorage(t *testing.T) {
-	h := NewHub(nil, nil, "", "")
+	h := NewHub(nil, nil, "", "", "", "")
 
 	// Increments before the first snapshot must be ignored
 	h.routeMessage(&Event{
