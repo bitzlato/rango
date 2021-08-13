@@ -202,7 +202,13 @@ func (session *AMQPSession) changeChannel(channel *amqp.Channel) {
 // only returned if the push action itself fails, see UnsafePush.
 func (session *AMQPSession) Push(ex, rt string, data []byte) error {
 	for {
-		err := session.UnsafePush(ex, rt, data)
+		err := session.channel.ExchangeDeclare(ex, "topic", false, false, false, false, nil)
+		if err != nil {
+			log.Error().Msgf("ExchangeDeclare: %s", err.Error())
+			continue
+		}
+
+		err = session.UnsafePush(ex, rt, data)
 		if err != nil {
 			log.Info().Msg("AMQP Push failed. Retrying...")
 			select {
