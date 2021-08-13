@@ -8,7 +8,7 @@ import (
 )
 
 func TestClient(t *testing.T) {
-	hub := NewHub(nil)
+	hub := NewHub(nil, nil, "", "")
 	client := &Client{
 		hub:     hub,
 		send:    make(chan []byte, 256),

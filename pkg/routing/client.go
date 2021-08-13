@@ -280,7 +280,7 @@ func (c *Client) read() {
 			continue
 		}
 
-		req, err := msg.ParseRequest(message)
+		req, err := msg.ParseRequest(message, c.isAuthenticated())
 		if err != nil {
 			c.send <- []byte(responseMust(err, nil))
 			continue
@@ -328,4 +328,8 @@ func (c *Client) write() {
 			}
 		}
 	}
+}
+
+func (c *Client) isAuthenticated() bool {
+	return c.Auth.UID != ""
 }
