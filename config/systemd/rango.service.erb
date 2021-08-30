@@ -3,7 +3,6 @@ Description = <%= fetch(:application) %> (<%= fetch(:stage) %>) server
 After=syslog.target network.target
 
 [Service]
-WatchdogSec=10
 Type=simple
 Environment=PWD=<%= current_path %>
 EnvironmentFile=<%= current_path %>/.env
