@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	amqpLocal "github.com/openware/rango/pkg/amqp"
 	msg "github.com/openware/rango/pkg/message"
 	"github.com/openware/rango/pkg/metrics"
 	"github.com/rs/zerolog"
@@ -44,6 +45,14 @@ type Hub struct {
 	RBAC map[string][]string
 
 	mutex sync.Mutex
+
+	mq amqpSession
+}
+
+type amqpSession struct {
+	session         *amqpLocal.AMQPSession
+	orderExchange   string
+	orderRoutingKey string
 }
 
 type Event struct {
@@ -59,7 +68,7 @@ type IncrementalObject struct {
 	Increments []string
 }
 
-func NewHub(rbac map[string][]string) *Hub {
+func NewHub(rbac map[string][]string, session *amqpLocal.AMQPSession, orderExchange string, orderRoutingKey string) *Hub {
 	return &Hub{
 		Requests:           make(chan Request),
 		Unregister:         make(chan IClient),
@@ -68,6 +77,11 @@ func NewHub(rbac map[string][]string) *Hub {
 		PrefixedTopics:     make(map[string]map[string]*Topic, 100),
 		IncrementalObjects: make(map[string]*IncrementalObject, 5),
 		RBAC:               rbac,
+		mq: amqpSession{
+			session:         session,
+			orderExchange:   orderExchange,
+			orderRoutingKey: orderRoutingKey,
+		},
 	}
 }
 
@@ -344,6 +358,8 @@ func (h *Hub) handleRequest(req *Request) {
 		h.handleSubscribe(req)
 	case "unsubscribe":
 		h.handleUnsubscribe(req)
+	case "order":
+		h.handleOrder(req)
 	default:
 		req.client.Send(responseMust(errors.New("unsupported method"), nil))
 	}
@@ -559,4 +575,51 @@ func (h *Hub) handleUnsubscribe(req *Request) {
 		"message": "unsubscribed",
 		"streams": req.client.GetSubscriptions(),
 	}))
+}
+
+func (h *Hub) handleOrder(req *Request) {
+	h.orderPrivate(req)
+}
+
+type orderPrivateMessage struct {
+	MemberUID string          `json:"member_uid"`
+	Data      json.RawMessage `json:"data"`
+}
+
+func getOrderPrivateMessage(uid string, data []byte) ([]byte, error) {
+	d := orderPrivateMessage{
+		MemberUID: uid,
+		Data:      data,
+	}
+
+	bb, err := json.Marshal(d)
+	if err != nil {
+		return nil, fmt.Errorf("Fail to JSON marshal: %s", err.Error())
+	}
+
+	return bb, nil
+}
+
+func (h *Hub) orderPrivate(req *Request) {
+	uid := req.client.GetAuth().UID
+	if uid == "" {
+		log.Trace().Msgf("Anonymous user tried to push message in rabbit mq: %s", string(req.Message))
+		return
+	}
+
+	bb, err := getOrderPrivateMessage(uid, req.Message)
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return
+	}
+
+	err = h.mq.session.Push(h.mq.orderExchange, h.mq.orderRoutingKey, bb)
+	if err != nil {
+		log.Error().Msgf("Push failed: %s", err)
+		return
+	}
+
+	if isTrace() {
+		log.Trace().Msgf("Pushed to %s", string(req.Message))
+	}
 }

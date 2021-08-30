@@ -1,2 +1,4 @@
 config/rsa*
 /log
+rango
+.vscode

@@ -26,6 +26,9 @@ var (
 	amqpAddr = flag.String("amqp-addr", "", "AMQP server address")
 	pubKey   = flag.String("pubKey", "config/rsa-key.pub", "Path to public key")
 	exName   = flag.String("exchange", "peatio.events.ranger", "Exchange name of upstream messages")
+
+	orderExchange   = flag.String("order-exchange", "peatio.events.ranger", "Exchange name for order messages")
+	orderRoutingKey = flag.String("order-routing-key", "peatio.order.new", "Routing key for order messages")
 )
 
 const prefix = "Bearer "
@@ -167,7 +170,6 @@ func main() {
 	metrics.Enable()
 
 	rbac := getRBACConfig()
-	hub := routing.NewHub(rbac)
 	pub, err := getPublicKey()
 	if err != nil {
 		log.Error().Msgf("Loading public key failed: %s", err.Error())
@@ -182,6 +184,9 @@ func main() {
 		log.Fatal().Msgf("creating new AMQP session failed: %s", err.Error())
 		return
 	}
+
+	hub := routing.NewHub(rbac, mq, *orderExchange, *orderRoutingKey)
+
 	err = mq.Stream(*exName, qName, hub.ReceiveMsg)
 	defer mq.Close(qName)
 

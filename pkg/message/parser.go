@@ -7,8 +7,10 @@ import (
 	"reflect"
 )
 
-func ParseRequest(msg []byte) (Request, error) {
-	request, err := Parse(msg)
+var errInvalidEvent = errors.New("Could not parse Type: Invalid event")
+
+func ParseRequest(msg []byte, isAuthClient bool) (Request, error) {
+	request, err := Parse(msg, isAuthClient)
 	if err != nil {
 		return request, err
 	}
@@ -16,7 +18,7 @@ func ParseRequest(msg []byte) (Request, error) {
 	return request, nil
 }
 
-func Parse(msg []byte) (Request, error) {
+func Parse(msg []byte, isAuthClient bool) (Request, error) {
 	var v map[string]interface{}
 	var parsed Request
 
@@ -51,8 +53,21 @@ func Parse(msg []byte) (Request, error) {
 				parsed.Streams = append(parsed.Streams, streams.Index(i).Interface().(string))
 			}
 		}
+	case "order":
+		parsed.Method = "order"
+
+		if !isAuthClient {
+			return parsed, errInvalidEvent
+		}
+
+		bb, err := json.Marshal(v["data"])
+		if err != nil {
+			return parsed, err
+		}
+
+		parsed.Message = bb
 	default:
-		return parsed, errors.New("Could not parse Type: Invalid event")
+		return parsed, errInvalidEvent
 	}
 
 	return parsed, nil
