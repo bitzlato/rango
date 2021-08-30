@@ -27,8 +27,8 @@ var (
 	pubKey   = flag.String("pubKey", "config/rsa-key.pub", "Path to public key")
 	exName   = flag.String("exchange", "peatio.events.ranger", "Exchange name of upstream messages")
 
-	orderExchange   = flag.String("order-exchange", "peatio.events.ranger", "Exchange name for order messages")
-	orderRoutingKey = flag.String("order-routing-key", "peatio.order.new", "Routing key for order messages")
+	orderExchange   = flag.String("order-exchange", "peatio.ranger", "Exchange name for order messages")
+	orderRoutingKey = flag.String("order-routing-key", "peatio.ranger.new_orders", "Routing key for order messages")
 )
 
 const prefix = "Bearer "
