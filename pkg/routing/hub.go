@@ -50,9 +50,11 @@ type Hub struct {
 }
 
 type amqpSession struct {
-	session         *amqpLocal.AMQPSession
-	orderExchange   string
-	orderRoutingKey string
+	session                 *amqpLocal.AMQPSession
+	orderExchange           string
+	orderRoutingKey         string
+	cancelOnCloseExchange   string
+	cancelOnCloseRoutingKey string
 }
 
 type Event struct {
@@ -68,7 +70,7 @@ type IncrementalObject struct {
 	Increments []string
 }
 
-func NewHub(rbac map[string][]string, session *amqpLocal.AMQPSession, orderExchange string, orderRoutingKey string) *Hub {
+func NewHub(rbac map[string][]string, session *amqpLocal.AMQPSession, orderExchange string, orderRoutingKey string, cancelOnCloseExchange string, cancelOnCloseRoutingKey string) *Hub {
 	return &Hub{
 		Requests:           make(chan Request),
 		Unregister:         make(chan IClient),
@@ -78,9 +80,11 @@ func NewHub(rbac map[string][]string, session *amqpLocal.AMQPSession, orderExcha
 		IncrementalObjects: make(map[string]*IncrementalObject, 5),
 		RBAC:               rbac,
 		mq: amqpSession{
-			session:         session,
-			orderExchange:   orderExchange,
-			orderRoutingKey: orderRoutingKey,
+			session:                 session,
+			orderExchange:           orderExchange,
+			orderRoutingKey:         orderRoutingKey,
+			cancelOnCloseExchange:   cancelOnCloseExchange,
+			cancelOnCloseRoutingKey: cancelOnCloseRoutingKey,
 		},
 	}
 }
@@ -118,10 +122,57 @@ func (h *Hub) ListenWebsocketEvents() {
 			h.handleRequest(&req)
 
 		case client := <-h.Unregister:
-			log.Info().Msgf("Unregistering client (%s)", client.GetAuth().UID)
-			h.unsubscribeAll(client)
-			client.Close()
+			h.handleUnregister(client)
 		}
+	}
+}
+
+func (h *Hub) handleUnregister(client IClient) {
+	log.Info().Msgf("Unregistering client (%s)", client.GetAuth().UID)
+	h.unsubscribeAll(client)
+	client.Close()
+
+	h.handleCancelOnClose(client)
+}
+
+type cancelOnCloseMessage struct {
+	Event     string `json:"event"`
+	MemberUID string `json:"member_uid"`
+}
+
+func getCancelOnCloseMessage(uid string) ([]byte, error) {
+	d := cancelOnCloseMessage{
+		Event:     "close_all_orders",
+		MemberUID: uid,
+	}
+
+	bb, err := json.Marshal(d)
+	if err != nil {
+		return nil, fmt.Errorf("Fail to JSON marshal: %s", err.Error())
+	}
+
+	return bb, nil
+}
+
+func (h *Hub) handleCancelOnClose(c IClient) {
+	if !c.GetAuth().IsCancelOnClose {
+		return
+	}
+
+	bb, err := getCancelOnCloseMessage(c.GetAuth().UID)
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return
+	}
+
+	err = h.mq.session.Push(h.mq.cancelOnCloseExchange, h.mq.cancelOnCloseRoutingKey, bb)
+	if err != nil {
+		log.Error().Msgf("Push failed: %s", err)
+		return
+	}
+
+	if isTrace() {
+		log.Trace().Msgf("Pushed to %s", string(bb))
 	}
 }
 

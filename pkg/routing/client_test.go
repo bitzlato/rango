@@ -2,13 +2,14 @@ package routing
 
 import (
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient(t *testing.T) {
-	hub := NewHub(nil, nil, "", "")
+	hub := NewHub(nil, nil, "", "", "", "")
 	client := &Client{
 		hub:     hub,
 		send:    make(chan []byte, 256),
@@ -67,6 +68,17 @@ func TestParseStreamsFromURI(t *testing.T) {
 	assert.Equal(t, []string{"aaa", "bbb"}, parseStreamsFromURI("/?stream=aaa&stream=bbb"))
 	assert.Equal(t, []string{"aaa", "bbb"}, parseStreamsFromURI("/?stream=aaa,bbb"))
 	assert.Equal(t, []string{"aaa", "bbb"}, parseStreamsFromURI("/public/?stream=aaa,bbb"))
+	assert.Equal(t, []string{"aaa", "bbb", "ccc", "ddd"}, parseStreamsFromURI("/public/?stream=aaa,bbb&stream=ccc,ddd"))
+}
+
+func TestParseCancelOnCloseFromURI(t *testing.T) {
+	assert.Equal(t, true, parseCancelOnCloseFromURI(url.Values{"cancel_on_close": []string{"true"}}))
+	assert.Equal(t, false, parseCancelOnCloseFromURI(url.Values{"cancel_on_close": []string{"false"}}))
+	assert.Equal(t, true, parseCancelOnCloseFromURI(url.Values{"cancel_on_close": []string{"1"}}))
+	assert.Equal(t, false, parseCancelOnCloseFromURI(url.Values{"cancel_on_close": []string{"0"}}))
+	assert.Equal(t, false, parseCancelOnCloseFromURI(url.Values{"cancel_on_close": []string{"2"}}))
+	assert.Equal(t, false, parseCancelOnCloseFromURI(url.Values{"cancel_on_close": []string{"1,2"}}))
+	assert.Equal(t, true, parseCancelOnCloseFromURI(url.Values{"cancel_on_close": []string{"1", "1,2"}}))
 }
 
 func TestCheckSameOriginEmpty(t *testing.T) {
