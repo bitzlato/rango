@@ -27,8 +27,8 @@ var (
 	pubKey   = flag.String("pubKey", "config/rsa-key.pub", "Path to public key")
 	exName   = flag.String("exchange", "peatio.events.ranger", "Exchange name of upstream messages")
 
-	cancelOnCloseExchange   = flag.String("cancel-on-close-exchange", "peatio.events.ranger", "Exchange name for cancel on close")
-	cancelOnCloseRoutingKey = flag.String("cancel-on-close-routing-key", "peatio.cancel.close", "Routing key for cancel on close")
+	cancelOnCloseExchange   = flag.String("cancel-on-close-exchange", "peatio.ranger", "Exchange name for cancel on close")
+	cancelOnCloseRoutingKey = flag.String("cancel-on-close-routing-key", "peatio.ranger.cancel_orders", "Routing key for cancel on close")
 
 	orderExchange   = flag.String("order-exchange", "peatio.ranger", "Exchange name for order messages")
 	orderRoutingKey = flag.String("order-routing-key", "peatio.ranger.new_orders", "Routing key for order messages")
