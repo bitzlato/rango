@@ -21,6 +21,6 @@ func main() {
 	flag.Parse()
 
 	ks, _ := auth.LoadOrGenerateKeys("config/rsa-key", "config/rsa-key.pub")
-	t, _ := auth.ForgeToken(*p2p_uid, *uid, *email, *role, *level, *sub, ks.PrivateKey, nil)
+	t, _ := auth.ForgeToken(*p2p_uid, *uid, *email, *role, *level, ks.PrivateKey, nil)
 	fmt.Print(t)
 }
