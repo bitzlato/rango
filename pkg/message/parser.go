@@ -7,7 +7,7 @@ import (
 	"reflect"
 )
 
-var errInvalidEvent = errors.New("Could not parse Type: Invalid event")
+var errInvalidEvent = errors.New("could not parse Type: Invalid event")
 
 func ParseRequest(msg []byte, isAuthClient bool) (Request, error) {
 	request, err := Parse(msg, isAuthClient)
@@ -23,7 +23,7 @@ func Parse(msg []byte, isAuthClient bool) (Request, error) {
 	var parsed Request
 
 	if err := json.Unmarshal(msg, &v); err != nil {
-		return parsed, fmt.Errorf("Could not parse message: %w", err)
+		return parsed, fmt.Errorf("could not parse message: %w", err)
 	}
 
 	switch v["event"] {
@@ -31,7 +31,7 @@ func Parse(msg []byte, isAuthClient bool) (Request, error) {
 		parsed.Method = "subscribe"
 		streams, ok := v["streams"]
 		if !ok {
-			return parsed, fmt.Errorf("No streams provided")
+			return parsed, fmt.Errorf("no streams provided")
 		}
 		switch reflect.TypeOf(streams).Kind() {
 		case reflect.Slice:
@@ -44,7 +44,7 @@ func Parse(msg []byte, isAuthClient bool) (Request, error) {
 		parsed.Method = "unsubscribe"
 		streams, ok := v["streams"]
 		if !ok {
-			return parsed, fmt.Errorf("No streams provided")
+			return parsed, fmt.Errorf("no streams provided")
 		}
 		switch reflect.TypeOf(streams).Kind() {
 		case reflect.Slice:

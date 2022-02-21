@@ -14,7 +14,7 @@ import (
 var (
 	addr    = flag.String("addr", "localhost:8080", "http service address")
 	streams = flag.String("streams", "eurusd.ob-inc,eurusd.kline-12h", "streams to connect to")
-	wait    = flag.Float64("wait", 2, "Time to wait between submit batch of messages")
+	// wait    = flag.Float64("wait", 2, "Time to wait between submit batch of messages")
 )
 
 func main() {

@@ -148,7 +148,7 @@ func getCancelOnCloseMessage(uid string) ([]byte, error) {
 
 	bb, err := json.Marshal(d)
 	if err != nil {
-		return nil, fmt.Errorf("Fail to JSON marshal: %s", err.Error())
+		return nil, fmt.Errorf("fail to JSON marshal: %s", err.Error())
 	}
 
 	return bb, nil
@@ -251,7 +251,7 @@ func (h *Hub) handleIncrement(msg *Event) (string, error) {
 
 	o, ok := h.IncrementalObjects[msg.Topic]
 	if !ok {
-		return "", fmt.Errorf("No snapshot received before the increment for topic %s, ignoring", msg.Topic)
+		return "", fmt.Errorf("no snapshot received before the increment for topic %s, ignoring", msg.Topic)
 	}
 	o.Increments = append(o.Increments, string(body))
 	return string(body), nil
@@ -645,7 +645,7 @@ func getOrderPrivateMessage(uid string, data []byte) ([]byte, error) {
 
 	bb, err := json.Marshal(d)
 	if err != nil {
-		return nil, fmt.Errorf("Fail to JSON marshal: %s", err.Error())
+		return nil, fmt.Errorf("fail to JSON marshal: %s", err.Error())
 	}
 
 	return bb, nil
