@@ -64,7 +64,6 @@ func authHandler(h httpHanlder, key *rsa.PublicKey, mustAuth bool) httpHanlder {
 			r.Header.Del("JwtRole")
 		}
 		h(w, r)
-		return
 	}
 }
 

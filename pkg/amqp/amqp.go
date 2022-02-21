@@ -35,9 +35,9 @@ const (
 )
 
 var (
-	errNotConnected  = errors.New("not connected to a server")
-	errAlreadyClosed = errors.New("already closed: not connected to the server")
-	errShutdown      = errors.New("session is shutting down")
+	// errNotConnected  = errors.New("not connected to a server")
+	// errAlreadyClosed = errors.New("already closed: not connected to the server")
+	errShutdown = errors.New("session is shutting down")
 )
 
 // NewAMQPSession creates a new consumer state instance, and automatically
@@ -56,10 +56,7 @@ func (session *AMQPSession) waitChannelReady() {
 
 	if !session.isready {
 		session.mutex.Unlock()
-		select {
-		case <-session.ready:
-			return
-		}
+		<-session.ready
 	} else {
 		session.mutex.Unlock()
 	}
