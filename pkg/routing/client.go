@@ -130,7 +130,7 @@ func checkSameOrigin(origins string) func(r *http.Request) bool {
 func NewClient(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Error().Msg("Websocket upgrade failed: " + err.Error())
+		log.Error().Str("Origin", r.Header.Get("Origin")).Msg("Websocket upgrade failed: " + err.Error())
 		return
 	}
 	client := &Client{
